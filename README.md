@@ -13,3 +13,8 @@ todo
 - super chip8
 - some networking
 - wasm port0
+
+usage
+```ssh
+zig build run -- _roms/snake.ch8
+```
