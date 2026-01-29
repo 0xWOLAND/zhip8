@@ -58,21 +58,17 @@ pub const Chip8 = struct {
         @memcpy(self.memory[@import("constants.zig").START_ADDRESS..][0..len], buf);
     }
 
-    pub fn cycle(self: *Chip8) void {
-        self.opcode = (self.memory[self.pc] << 8) | self.memory[self.pc + 1];
+    pub fn step(self: *Chip8) !void {
+        self.opcode =
+            (@as(u16, self.memory[self.pc]) << 8) |
+            @as(u16, self.memory[self.pc + 1]);
+
         self.pc += 2;
-        dispatch(self.opcode)(self);
+
+        const idx: usize = @intCast((self.opcode & 0xF000) >> 12);
+        try dispatch[idx](self);
+
+        if (self.delay_timer > 0) self.delay_timer -= 1;
+        if (self.sound_timer > 0) self.sound_timer -= 1;
     }
 };
-
-test "test memcpy" {
-    var buffer1: [8]u8 = undefined;
-    @memset(&buffer1, 1);
-
-    var buffer2: [4]u8 = undefined;
-    @memset(&buffer2, 2);
-
-    @memcpy(buffer1[2..][0..buffer2.len], buffer2[0..]);
-
-    std.debug.print("Buffer after memcpy: {any}\n", .{buffer1});
-}
