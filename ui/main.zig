@@ -8,6 +8,7 @@ const FB_LEN: usize = @as(usize, zhip8.VIDEO_WIDTH) * @as(usize, zhip8.VIDEO_HEI
 
 const Model = struct {
     fb: []const bool,
+    const KeyEvent = struct { key: vaxis.Key, pressed: bool };
 
     pub fn widget(self: *Model) vxfw.Widget {
         return .{
@@ -36,7 +37,7 @@ const Model = struct {
             else => {},
         }
 
-        const key_event = switch (event) {
+        const key_event: ?KeyEvent = switch (event) {
             .key_press => |key| .{ .key = key, .pressed = true },
             .key_release => |key| .{ .key = key, .pressed = false },
             else => null,
