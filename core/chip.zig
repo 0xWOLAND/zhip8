@@ -39,23 +39,12 @@ pub const Chip8 = struct {
             .keypad = [_]bool{false} ** 16,
             .displaybuffer = [_]bool{false} ** (64 * 32),
             .opcode = 0,
-            .rng = std.Random.DefaultPrng.init(blk: {
-                var seed: u64 = 0;
-                _ = std.posix.getrandom(std.mem.asBytes(&seed)) catch {};
-                break :blk seed;
-            }),
+            .rng = std.Random.DefaultPrng.init(0xDEADBEEF),
         };
     }
 
-    pub fn load_program(self: *Chip8, allocator: std.mem.Allocator) !void {
-        const cwd = std.fs.cwd();
-        const file = try cwd.openFile("foo.txt", .{ .mode = .read_only });
-        defer file.close();
-
-        const buf = try file.readToEndAlloc(allocator, 8192);
-        const len = buf.len;
-
-        @memcpy(self.memory[@import("constants.zig").START_ADDRESS..][0..len], buf);
+    pub fn load_program(self: *Chip8, buf: []const u8) void {
+        @memcpy(self.memory[@import("constants.zig").START_ADDRESS..][0..buf.len], buf);
     }
 
     pub fn step(self: *Chip8) !void {

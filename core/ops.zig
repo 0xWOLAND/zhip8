@@ -66,7 +66,7 @@ pub const Ops = struct {
     fn OP_7XKK(chip: *Chip8) !void {
         const vx = (chip.opcode & 0x0F00) >> 8;
         const kk: u8 = @intCast(chip.opcode & 0x00FF);
-        chip.registers[vx] += kk;
+        chip.registers[vx] +|= kk;
     }
 
     // 0x8XY0: Set Vx = Vy
@@ -175,7 +175,8 @@ pub const Ops = struct {
         const VIDEO_HEIGHT = @import("constants.zig").VIDEO_HEIGHT;
 
         for (0..height) |y| {
-            const sprite = chip.memory[chip.index + y];
+            const addr: usize = (@as(usize, chip.index) + y) & 0x0FFF;
+            const sprite = chip.memory[addr];
 
             for (0..8) |x| {
                 const shift: u3 = @intCast(x);
@@ -289,7 +290,17 @@ fn op0(chip: *Chip8) !void {
     return switch (chip.opcode) {
         0x00E0 => Ops.OP_00E0(chip),
         0x00EE => Ops.OP_00EE(chip),
-        else => anyerror.IllegalOpcode,
+        // TODO: Implement SCHIP opcodes
+        0x0000 => {},
+        0x00FB => {},
+        0x00FC => {},
+        0x00FD => {},
+        0x00FE => {},
+        0x00FF => {},
+        else => {
+            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
+            return anyerror.IllegalOpcode;
+        },
     };
 }
 
@@ -304,7 +315,10 @@ fn op8(chip: *Chip8) !void {
         0x6 => Ops.OP_8XY6(chip),
         0x7 => Ops.OP_8XY7(chip),
         0xE => Ops.OP_8XYE(chip),
-        else => anyerror.IllegalOpcode,
+        else => {
+            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
+            return anyerror.IllegalOpcode;
+        },
     };
 }
 
@@ -312,7 +326,10 @@ fn opE(chip: *Chip8) !void {
     return switch (chip.opcode & 0xFF) {
         0x9E => Ops.OP_EX9E(chip),
         0xA1 => Ops.OP_EXA1(chip),
-        else => anyerror.IllegalOpcode,
+        else => {
+            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
+            return anyerror.IllegalOpcode;
+        },
     };
 }
 
@@ -327,7 +344,10 @@ fn opF(chip: *Chip8) !void {
         0x33 => Ops.OP_FX33(chip),
         0x55 => Ops.OP_FX55(chip),
         0x65 => Ops.OP_FX65(chip),
-        else => anyerror.IllegalOpcode,
+        else => {
+            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
+            return anyerror.IllegalOpcode;
+        },
     };
 }
 
@@ -352,7 +372,7 @@ pub const dispatch: [16]*const fn (*Chip8) anyerror!void = .{
 
 test "test dispatch" {
     var chip = Chip8.init();
-    chip.memory[0x200] = 0x60; // 0x600A: Set V0 = 0x0A
+    chip.memory[0x200] = 0x60;
     chip.memory[0x201] = 0x0A;
 
     chip.pc = 0x200;

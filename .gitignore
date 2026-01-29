@@ -1,1 +1,8 @@
 .zig-*
+zig-*
+
+# build files
+*.a
+
+# game files
+*.ch8
