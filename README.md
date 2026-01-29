@@ -4,3 +4,5 @@ spec
     - `0x000-0x1FF` for interpreter
     - `0x050-0x0A0` storage space for 16 built-in characters 
     - `0x200-0xFFF` instructions from ROM 
+- (DT) - 60Hz clock that goes to 0
+- (ST) - Activate sound whenever nonzero 
