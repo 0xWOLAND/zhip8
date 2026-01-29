@@ -1,3 +1,5 @@
+zig chip8 emulator w/ [libvaxis](https://github.com/rockorager/libvaxis)
+
 spec
 - 16 8-bit registers `V0` to `VF` (`0x00` - `0xFF`)
 - 4096 bytes of memory (`0x000` to `0xFFF`)
@@ -6,3 +8,8 @@ spec
     - `0x200-0xFFF` instructions from ROM 
 - (DT) - 60Hz clock that goes to 0
 - (ST) - Activate sound whenever nonzero 
+
+todo
+- super chip8
+- some networking
+- wasm port0
