@@ -11,20 +11,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // vaxis dependency
-    const vaxis = b.dependency("vaxis", .{
-        .target = target,
-        .optimize = optimize,
-    });
-
     // Executable root module (Zig 0.15 requires this)
     const exe_mod = b.createModule(.{
-        .root_source_file = b.path("ui/main.zig"),
+        .root_source_file = b.path("core/main.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
             .{ .name = "zhip8", .module = zhip8 },
-            .{ .name = "vaxis", .module = vaxis.module("vaxis") },
         },
     });
 
@@ -34,6 +27,27 @@ pub fn build(b: *std.Build) void {
     });
 
     b.installArtifact(exe);
+
+    // wasm library
+    const wasm_target = b.resolveTargetQuery(.{
+        .cpu_arch = .wasm32,
+        .os_tag = .freestanding,
+        .abi = .none,
+    });
+    const wasm_mod = b.createModule(.{
+        .root_source_file = b.path("core/root.zig"),
+        .target = wasm_target,
+        .optimize = optimize,
+    });
+    const wasm = b.addExecutable(.{
+        .name = "zhip8",
+        .root_module = wasm_mod,
+    });
+    wasm.entry = .disabled;
+    b.installArtifact(wasm);
+    const wasm_step = b.step("wasm", "Build the wasm binary");
+    wasm_step.dependOn(&wasm.step);
+    wasm_step.dependOn(b.getInstallStep());
 
     // Run
     const run_cmd = b.addRunArtifact(exe);
