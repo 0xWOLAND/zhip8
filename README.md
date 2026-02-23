@@ -1,4 +1,6 @@
-zig chip8 emulator w/ [libvaxis](https://github.com/rockorager/libvaxis)
+zig chip8 emulator w/ [libvaxis](https://github.com/rockorager/libvaxis) and roms from [John Earnest](https://github.com/repos/JohnEarnest/chip8Archive)
+
+
 
 spec
 - 16 8-bit registers `V0` to `VF` (`0x00` - `0xFF`)
@@ -15,6 +17,12 @@ todo
 - [x] wasm port
 
 usage
-```ssh
+```shell
 just tui _roms/snake.ch8
+```
+
+or for web usage 
+```shell
+cd web
+bun dev
 ```

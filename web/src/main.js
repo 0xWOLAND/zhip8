@@ -1,5 +1,4 @@
 import GUI from 'lil-gui';
-import roms from 'virtual:roms';
 
 const W = 64;
 const H = 32;
@@ -15,7 +14,11 @@ const ctx = canvas.getContext('2d', { alpha: false });
 if (!ctx) throw new Error('2D canvas context unavailable');
 ctx.imageSmoothingEnabled = false;
 
-const assetUrl = (path) => new URL(path, import.meta.env.BASE_URL).toString();
+const assetUrl = (path) => {
+  const base = import.meta.env.BASE_URL || '/';
+  const relative = `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+  return new URL(relative, document.baseURI).toString();
+};
 
 const wasm = await (await fetch(assetUrl('zhip8.wasm'))).arrayBuffer();
 const { instance } = await WebAssembly.instantiate(wasm);
@@ -31,7 +34,7 @@ async function loadRom(name) {
   isLoadingRom = true;
 
   try {
-    const rom = new Uint8Array(await (await fetch(assetUrl(`_roms/${name}`))).arrayBuffer());
+    const rom = await fetchRom(name);
     if (token !== loadToken) return;
 
     chip_init();
@@ -45,13 +48,39 @@ async function loadRom(name) {
   }
 }
 
-const state = { rom: roms[0], tickSpeed: 4 };
+async function fetchRomNames() {
+  const res = await fetch(
+    'https://api.github.com/repos/JohnEarnest/chip8Archive/contents/roms'
+    , { headers: { Accept: 'application/vnd.github+json' } });
+  if (!res.ok) throw new Error(`ROM list fetch failed: ${res.status}`);
+  const files = await res.json();
+  return files
+    .filter((f) => f.type === 'file' && f.name.endsWith('.ch8'))
+    .map((f) => f.name)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+async function fetchRom(name) {
+  const cache = await caches.open('zhip8-roms');
+  const req = new Request(`${'https://raw.githubusercontent.com/JohnEarnest/chip8Archive/master/roms/'
+    }${encodeURIComponent(name)}`);
+  const hit = await cache.match(req);
+  const res = hit ?? await fetch(req);
+  if (!res.ok) throw new Error(`ROM fetch failed: ${res.status}`);
+  if (!hit) await cache.put(req, res.clone());
+  return new Uint8Array(await res.arrayBuffer());
+}
+
+const state = { rom: '', tickSpeed: 4 };
 const gui = new GUI();
-gui.add(state, 'rom', roms).name('Program').onChange((name) => {
+const romController = gui.add(state, 'rom', ['loading...']).name('Program').onChange((name) => {
+  if (name === 'loading...') return;
   loadRom(name).catch((err) => console.error('ROM load failed:', err));
 });
 gui.add(state, 'tickSpeed', 1, 10, 1).name('Tick Speed');
-await loadRom(state.rom);
+const roms = await fetchRomNames();
+romController.options(roms);
+romController.setValue(roms.includes('snake.ch8') ? 'snake.ch8' : roms[0]);
 
 const KEYMAP = Object.freeze({
   '1': 0x1, '2': 0x2, '3': 0x3, '4': 0xC,
