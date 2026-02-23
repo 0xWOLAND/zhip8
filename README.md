@@ -1,5 +1,7 @@
 zig chip8 emulator w/ [libvaxis](https://github.com/rockorager/libvaxis) and roms from [John Earnest](https://github.com/repos/JohnEarnest/chip8Archive)
 
+[![ci](https://github.com/0xWOLAND/zhip8/actions/workflows/ci.yml/badge.svg)](https://github.com/0xWOLAND/zhip8/actions/workflows/ci.yml)
+
 
 
 spec
