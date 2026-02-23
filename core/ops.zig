@@ -1,5 +1,13 @@
 const Chip8 = @import("chip.zig").Chip8;
-const std = @import("std");
+const builtin = @import("builtin");
+
+fn illegalOpcode(op: u16) anyerror!void {
+    if (comptime builtin.target.os.tag != .freestanding) {
+        const std = @import("std");
+        std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{op});
+    }
+    return; // noop isntead of panicking
+}
 
 pub const Ops = struct {
     // 0x00E0: Clear the display
@@ -297,10 +305,7 @@ fn op0(chip: *Chip8) !void {
         0x00FD => {},
         0x00FE => {},
         0x00FF => {},
-        else => {
-            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
-            return anyerror.IllegalOpcode;
-        },
+        else => illegalOpcode(chip.opcode),
     };
 }
 
@@ -315,10 +320,7 @@ fn op8(chip: *Chip8) !void {
         0x6 => Ops.OP_8XY6(chip),
         0x7 => Ops.OP_8XY7(chip),
         0xE => Ops.OP_8XYE(chip),
-        else => {
-            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
-            return anyerror.IllegalOpcode;
-        },
+        else => illegalOpcode(chip.opcode),
     };
 }
 
@@ -326,10 +328,7 @@ fn opE(chip: *Chip8) !void {
     return switch (chip.opcode & 0xFF) {
         0x9E => Ops.OP_EX9E(chip),
         0xA1 => Ops.OP_EXA1(chip),
-        else => {
-            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
-            return anyerror.IllegalOpcode;
-        },
+        else => illegalOpcode(chip.opcode),
     };
 }
 
@@ -344,10 +343,7 @@ fn opF(chip: *Chip8) !void {
         0x33 => Ops.OP_FX33(chip),
         0x55 => Ops.OP_FX55(chip),
         0x65 => Ops.OP_FX65(chip),
-        else => {
-            std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{chip.opcode});
-            return anyerror.IllegalOpcode;
-        },
+        else => illegalOpcode(chip.opcode),
     };
 }
 

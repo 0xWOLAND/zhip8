@@ -1,5 +1,4 @@
 const Chip = @import("chip.zig").Chip8;
-const std = @import("std");
 const constants = @import("constants.zig");
 
 pub const VIDEO_WIDTH = constants.VIDEO_WIDTH;
