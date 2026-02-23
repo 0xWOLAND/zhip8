@@ -11,13 +11,18 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // Executable root module (Zig 0.15 requires this)
+    const vaxis = b.dependency("vaxis", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe_mod = b.createModule(.{
-        .root_source_file = b.path("core/main.zig"),
+        .root_source_file = b.path("tui/main.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
             .{ .name = "zhip8", .module = zhip8 },
+            .{ .name = "vaxis", .module = vaxis.module("vaxis") },
         },
     });
 
