@@ -1,0 +1,21 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run wasm:build && vite",
+    "build": "npm run wasm:build && vite build",
+    "preview": "vite preview",
+    "wasm:build": "node scripts/build-wasm.mjs"
+  },
+  "devDependencies": {
+    "vite": "^8.0.0-beta.13"
+  },
+  "overrides": {
+    "vite": "^8.0.0-beta.13"
+  },
+  "dependencies": {
+    "lil-gui": "^0.21.0"
+  }
+}

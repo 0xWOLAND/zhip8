@@ -44,6 +44,7 @@ pub fn build(b: *std.Build) void {
         .root_module = wasm_mod,
     });
     wasm.entry = .disabled;
+    wasm.rdynamic = true;
     b.installArtifact(wasm);
     const wasm_step = b.step("wasm", "Build the wasm binary");
     wasm_step.dependOn(&wasm.step);
