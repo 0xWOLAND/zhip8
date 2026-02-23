@@ -6,3 +6,5 @@ zig-*
 
 # game files
 *.ch8
+
+dist/

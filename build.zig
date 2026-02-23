@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(exe);
 
-    // wasm library
+    // wasm executable
     const wasm_target = b.resolveTargetQuery(.{
         .cpu_arch = .wasm32,
         .os_tag = .freestanding,
