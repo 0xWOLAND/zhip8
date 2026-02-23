@@ -18,16 +18,25 @@ const Model = struct {
         };
     }
 
+    fn reset_keys() void {
+        for (input.keymap) |entry| {
+            zhip8.chip_key(entry.chip, false);
+        }
+    }
+
     fn typeErasedEventHandler(ptr: *anyopaque, ctx: *vxfw.EventContext, event: vxfw.Event) anyerror!void {
         const self: *Model = @ptrCast(@alignCast(ptr));
         switch (event) {
-            .init => try ctx.tick(16, self.widget()),
+            .init => try ctx.tick(1, self.widget()),
             .tick => {
-                zhip8.chip_step();
+                for (0..20) |_| { // Hack to run the emulator at ~60Hz
+                    zhip8.chip_step();
+                }
                 ctx.redraw = true;
-                try ctx.tick(16, self.widget());
+                try ctx.tick(1, self.widget());
             },
             .key_press => |key| {
+                reset_keys();
                 if (key.matches(vaxis.Key.escape, .{}) or key.matches('c', .{ .ctrl = true })) {
                     ctx.quit = true;
                     return;
@@ -55,10 +64,10 @@ const Model = struct {
     fn typeErasedDrawFn(ptr: *anyopaque, ctx: vxfw.DrawContext) std.mem.Allocator.Error!vxfw.Surface {
         const self: *Model = @ptrCast(@alignCast(ptr));
         const on_cell: vaxis.Cell = .{
-            .char = .{ .grapheme = "██", .width = 2 },
+            .char = .{ .grapheme = "█", .width = 1 },
         };
         const off_cell: vaxis.Cell = .{
-            .char = .{ .grapheme = "  ", .width = 2 },
+            .char = .{ .grapheme = " ", .width = 1 },
         };
 
         var surface = try vxfw.Surface.init(ctx.arena, self.widget(), .{

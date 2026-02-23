@@ -66,7 +66,7 @@ pub const Ops = struct {
     fn OP_7XKK(chip: *Chip8) !void {
         const vx = (chip.opcode & 0x0F00) >> 8;
         const kk: u8 = @intCast(chip.opcode & 0x00FF);
-        chip.registers[vx] +|= kk;
+        chip.registers[vx] +%= kk;
     }
 
     // 0x8XY0: Set Vx = Vy
@@ -112,7 +112,7 @@ pub const Ops = struct {
         const vy = (chip.opcode & 0x00F0) >> 4;
         const diff = @subWithOverflow(chip.registers[vx], chip.registers[vy]);
         chip.registers[vx] = @intCast(diff[0]);
-        chip.registers[0xF] = diff[1];
+        chip.registers[0xF] = if (diff[1] == 0) 1 else 0;
     }
 
     // 0x8XY6: Set Vx = Vx SHR 1
@@ -128,7 +128,7 @@ pub const Ops = struct {
         const vy = (chip.opcode & 0x00F0) >> 4;
         const diff = @subWithOverflow(chip.registers[vy], chip.registers[vx]);
         chip.registers[vx] = @intCast(diff[0]);
-        chip.registers[0xF] = diff[1];
+        chip.registers[0xF] = if (diff[1] == 0) 1 else 0;
     }
 
     // 0x8XYE: Set Vx = Vx SHL 1
@@ -197,7 +197,7 @@ pub const Ops = struct {
     fn OP_EX9E(chip: *Chip8) !void {
         const vx = (chip.opcode & 0x0F00) >> 8;
         const key = chip.registers[vx];
-        if (chip.keypad[key]) {
+        if (key < 16 and chip.keypad[key]) {
             chip.pc += 2;
         }
     }
@@ -206,7 +206,7 @@ pub const Ops = struct {
     fn OP_EXA1(chip: *Chip8) !void {
         const vx = (chip.opcode & 0x0F00) >> 8;
         const key = chip.registers[vx];
-        if (!chip.keypad[key]) {
+        if (key >= 16 or !chip.keypad[key]) {
             chip.pc += 2;
         }
     }
