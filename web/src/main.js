@@ -15,7 +15,9 @@ const ctx = canvas.getContext('2d', { alpha: false });
 if (!ctx) throw new Error('2D canvas context unavailable');
 ctx.imageSmoothingEnabled = false;
 
-const wasm = await (await fetch('/zhip8.wasm')).arrayBuffer();
+const assetUrl = (path) => new URL(path, import.meta.env.BASE_URL).toString();
+
+const wasm = await (await fetch(assetUrl('zhip8.wasm'))).arrayBuffer();
 const { instance } = await WebAssembly.instantiate(wasm);
 const { memory, chip_init, chip_load, chip_step, chip_key, chip_fb_ptr } = instance.exports;
 
@@ -29,7 +31,7 @@ async function loadRom(name) {
   isLoadingRom = true;
 
   try {
-    const rom = new Uint8Array(await (await fetch(`/_roms/${name}`)).arrayBuffer());
+    const rom = new Uint8Array(await (await fetch(assetUrl(`_roms/${name}`))).arrayBuffer());
     if (token !== loadToken) return;
 
     chip_init();

@@ -4,6 +4,7 @@ import { readdirSync } from 'fs'
 const ROMS_ID = '\0virtual:roms'
 
 export default defineConfig({
+  base: './',
   plugins: [
     {
       name: 'assets',

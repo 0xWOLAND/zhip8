@@ -10,11 +10,11 @@ spec
 - (ST) - Activate sound whenever nonzero 
 
 todo
-- super chip8
+- [x] super chip8
 - some networking
-- wasm port0
+- [x] wasm port
 
 usage
 ```ssh
-zig build run -- _roms/snake.ch8
+just tui _roms/snake.ch8
 ```
