@@ -6,7 +6,7 @@ fn illegalOpcode(op: u16) anyerror!void {
         const std = @import("std");
         std.debug.print("Illegal opcode: 0x{X:0>4}\n", .{op});
     }
-    return anyerror.IllegalOpcode;
+    return; // noop isntead of panicking
 }
 
 pub const Ops = struct {

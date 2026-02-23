@@ -4,10 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npm run wasm:build && vite",
-    "build": "npm run wasm:build && vite build",
-    "preview": "vite preview",
-    "wasm:build": "node scripts/build-wasm.mjs"
+    "dev": "vite",
+    "preview": "vite preview"
   },
   "devDependencies": {
     "vite": "^8.0.0-beta.13"

@@ -1,66 +1,95 @@
 import GUI from 'lil-gui';
 import roms from 'virtual:roms';
 
+const W = 64;
+const H = 32;
+const SCALE = 12;
+const ROM_PTR = 0x200;
+const BG = '#111';
+const FG = '#6cf06c';
+
+const app = document.querySelector('#app');
+app.innerHTML = `<canvas id="screen" width="${W * SCALE}" height="${H * SCALE}"></canvas>`;
+const canvas = document.querySelector('#screen');
+const ctx = canvas.getContext('2d', { alpha: false });
+if (!ctx) throw new Error('2D canvas context unavailable');
+ctx.imageSmoothingEnabled = false;
+
 const wasm = await (await fetch('/zhip8.wasm')).arrayBuffer();
 const { instance } = await WebAssembly.instantiate(wasm);
 const { memory, chip_init, chip_load, chip_step, chip_key, chip_fb_ptr } = instance.exports;
 
-const W = 64;
-const H = 32;
-const SCALE = 12;
-
-document.querySelector('#app').innerHTML = `<canvas id="screen" width="${W * SCALE}" height="${H * SCALE}"></canvas>`;
-const canvas = document.querySelector('#screen');
-const ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = false;
-
 const mem = new Uint8Array(memory.buffer);
-const romPtr = 0x200;
 let fb = new Uint8Array(memory.buffer, Number(chip_fb_ptr()), W * H);
+let isLoadingRom = false;
+let loadToken = 0;
 
 async function loadRom(name) {
-  const rom = new Uint8Array(await (await fetch(`/_roms/${name}`)).arrayBuffer());
-  chip_init();
-  mem.set(rom, romPtr);
-  chip_load(romPtr, rom.length);
-  fb = new Uint8Array(memory.buffer, Number(chip_fb_ptr()), W * H);
+  const token = ++loadToken;
+  isLoadingRom = true;
+
+  try {
+    const rom = new Uint8Array(await (await fetch(`/_roms/${name}`)).arrayBuffer());
+    if (token !== loadToken) return;
+
+    chip_init();
+    for (let key = 0; key < 16; key += 1) chip_key(key, false);
+
+    mem.set(rom, ROM_PTR);
+    chip_load(ROM_PTR, rom.length);
+    fb = new Uint8Array(memory.buffer, Number(chip_fb_ptr()), W * H);
+  } finally {
+    if (token === loadToken) isLoadingRom = false;
+  }
 }
 
-const state = { rom: roms[0] };
-new GUI().add(state, 'rom', roms).name('Program').onChange(loadRom);
+const state = { rom: roms[0], tickSpeed: 4 };
+const gui = new GUI();
+gui.add(state, 'rom', roms).name('Program').onChange((name) => {
+  loadRom(name).catch((err) => console.error('ROM load failed:', err));
+});
+gui.add(state, 'tickSpeed', 1, 10, 1).name('Tick Speed');
 await loadRom(state.rom);
 
-const KEYMAP = {
+const KEYMAP = Object.freeze({
   '1': 0x1, '2': 0x2, '3': 0x3, '4': 0xC,
   q: 0x4, w: 0x5, e: 0x6, r: 0xD,
   a: 0x7, s: 0x8, d: 0x9, f: 0xE,
   z: 0xA, x: 0x0, c: 0xB, v: 0xF,
-};
+});
 
-addEventListener('keydown', (e) => {
+function setKey(pressed, e) {
   const key = KEYMAP[e.key.toLowerCase()];
   if (key === undefined) return;
   e.preventDefault();
-  if (!e.repeat) chip_key(key, true);
-});
+  if (pressed && e.repeat) return;
+  chip_key(key, pressed);
+}
 
-addEventListener('keyup', (e) => {
-  const key = KEYMAP[e.key.toLowerCase()];
-  if (key === undefined) return;
-  e.preventDefault();
-  chip_key(key, false);
-});
+addEventListener('keydown', (e) => setKey(true, e));
+addEventListener('keyup', (e) => setKey(false, e));
+
+function stepCpu() {
+  for (let i = 0; i < state.tickSpeed; i += 1) chip_step();
+}
+
+function drawFrame() {
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = FG;
+  for (let i = 0; i < W * H; i += 1) {
+    if (!fb[i]) continue;
+    const x = i % W;
+    const y = (i / W) | 0;
+    ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+  }
+}
 
 function render() {
-  for (let i = 0; i < 10; i += 1) chip_step();
-  ctx.fillStyle = '#111';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#6cf06c';
-  for (let y = 0; y < H; y += 1) {
-    for (let x = 0; x < W; x += 1) {
-      if (fb[y * W + x]) ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
-    }
+  if (!isLoadingRom) {
+    stepCpu();
   }
+  drawFrame();
   requestAnimationFrame(render);
 }
 
