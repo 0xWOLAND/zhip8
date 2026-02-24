@@ -1,4 +1,4 @@
-zig chip8 emulator w/ [libvaxis](https://github.com/rockorager/libvaxis) and roms from [John Earnest](https://github.com/repos/JohnEarnest/chip8Archive)
+zig chip8 emulator w/ [libvaxis](https://github.com/rockorager/libvaxis) and roms from [John Earnest](https://github.com/JohnEarnest/chip8Archive)
 
 [![ci](https://github.com/0xWOLAND/zhip8/actions/workflows/ci.yml/badge.svg)](https://github.com/0xWOLAND/zhip8/actions/workflows/ci.yml)
 
@@ -15,7 +15,7 @@ spec
 
 todo
 - [x] super chip8
-- some networking
+- [] some networking
 - [x] wasm port
 
 usage
